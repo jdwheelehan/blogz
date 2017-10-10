@@ -13,7 +13,7 @@ class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), unique=True)
     body = db.Column(db.String(240))
-    #tasks = db.relationship('Task', backref='owner')
+    
 
     def __init__(self, title, body):
         self.title = title
@@ -21,12 +21,15 @@ class Blog(db.Model):
 
 @app.route('/blog', methods=['POST', 'GET'])
 def blog_display():
-    
+    if request.args:
+        post_id = request.args.get('id')
+        posts = Blog.query.filter_by(id=post_id).all()
+        return render_template('display.html',posts=posts)
+    else:
+        posts = Blog.query.all()
+        return render_template('display.html',posts=posts)
 
-    posts = Blog.query.all()
 
-
-    return render_template('display.html',posts=posts)
 
 @app.route('/newpost', methods=['POST', 'GET'])
 def new_post():
@@ -45,7 +48,8 @@ def new_post():
             new_post = Blog(title_name, body_name)
             db.session.add(new_post)
             db.session.commit()
-            return redirect('/blog')
+            new_id = str(new_post.id)
+            return redirect('/blog?id='+new_id)
         else:
             return render_template('newpost.html', title = title_name, body = body_name, 
                 title_error = title_error, body_error = body_error,)
